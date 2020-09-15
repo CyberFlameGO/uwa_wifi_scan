@@ -28,23 +28,23 @@ WAIT_TIME=10;
 INTERFACE=$1;
 ESSID=$2;
 OUT_FILE="${3}${START_TIME}.csv";
-
-echo "time,BSSID,Quality,RSSI,ESSID";
-
+touch ${OUT_FILE};
 echo "Starting scan";
+echo "time,BSSID,Channel,Quality,RSSI,ESSID";
 
-result=$(sudo iwlist ${INTERFACE} scanning | 
-	grep -E "Cell|Quality|Last Beacon|ESSID" | 
-	sed -e "s/^[ \t]*//" -e "s/[ \t]*$//" | 
-	sed -e "s/Quality=//" -e "s/Signal level=// " -e "s/ESSID://" -e "s/ dBm//" -e "s/  / /" |
-	awk '{ORS = (NR % 3 == 0)? "\n" : " "; print}' |
+result=$(sudo iwlist ${INTERFACE} scanning |
+	grep -E "Cell|Quality|Last Beacon|ESSID|Channel" |
+	sed -e "s/^[ \t]*//" -e "s/[ \t]*$//" |
+	sed -e "s/Quality=//" -e "s/Signal level=// " -e "s/ESSID://" -e "s/ dBm//" -e "s/Channel://" -e "s/  / /" |
+	awk '{ORS = (NR % 4 == 0)? "\n" : " "; print}' |
 	cut -c 20- |
 	csvformat -d ' ' -D ',' |
 	grep -e "${ESSID}$");
 
-exe_time=$(date +'%y-%m-%d-%H-%M-%S')	
-	
+exe_time=$(date +'%y-%m-%d-%H-%M-%S')
 for line in ${result};
 do
 	echo "${exe_time},${line}" | tee -a ${OUT_FILE};
 done
+
+echo "Recordings Taken: `ls ${3} | wc -w`";

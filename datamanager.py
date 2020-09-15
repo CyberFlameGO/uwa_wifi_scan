@@ -25,11 +25,11 @@ def combine_data(zone, coords_file='coords.xlsx'):
                                 usecols=["Latitude", "Longtitude"])
 
     wifi_data = pd.read_csv(os.path.join(WIFI_DIR, zone, 'complete.csv'),
-                            names=['time', 'bssid', 'quality', 'rssi', 'essid'])
+                            names=['time', 'bssid', 'channel', 'quality', 'rssi', 'essid'])
 
     locations['time'] = pd.DataFrame(data=wifi_data['time'].unique())
     result = pd.merge(locations, wifi_data, on='time')
-    result.columns = ['lat', 'lon', 'time', 'bssid', 'quality', 'rssi', 'essid']
+    result.columns = ['lat', 'lon', 'time', 'bssid', 'channel', 'quality', 'rssi', 'essid']
     return result, locations
 
 def save_wifi_loc_data(dataframe, zone):
@@ -45,7 +45,7 @@ def save_wifi_loc_data(dataframe, zone):
     """
     dataframe.to_csv(os.path.join(WIFI_DIR, zone, 'wifi_loc.csv'), index=False)
 
-def load_wifi_loc_data(zone):
+def load_wifi_loc_data(zone, alternative_folder=''):
     """
     Loads the WiFi location data to a pandas dataframe
 
@@ -56,4 +56,4 @@ def load_wifi_loc_data(zone):
     Returns:
         a pandas dataframe with the data loaded in
     """
-    return pd.read_csv(os.path.join(WIFI_DIR, zone, 'wifi_loc.csv'))
+    return pd.read_csv(os.path.join(WIFI_DIR, alternative_folder, zone, 'wifi_loc.csv'))
