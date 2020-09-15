@@ -28,15 +28,15 @@ WAIT_TIME=10;
 INTERFACE=$1;
 ESSID=$2;
 OUT_FILE="${3}${START_TIME}.csv";
-touch ${OUT_FILE};
 echo "Starting scan";
-echo "time,BSSID,Channel,Quality,RSSI,ESSID";
+echo "time,BSSID,Quality,RSSI,ESSID";
 
+touch ${OUT_FILE};
 result=$(sudo iwlist ${INTERFACE} scanning |
-	grep -E "Cell|Quality|Last Beacon|ESSID|Channel" |
+	grep -E "Cell|Quality|Last Beacon|ESSID" |
 	sed -e "s/^[ \t]*//" -e "s/[ \t]*$//" |
-	sed -e "s/Quality=//" -e "s/Signal level=// " -e "s/ESSID://" -e "s/ dBm//" -e "s/Channel://" -e "s/  / /" |
-	awk '{ORS = (NR % 4 == 0)? "\n" : " "; print}' |
+	sed -e "s/Quality=//" -e "s/Signal level=// " -e "s/ESSID://" -e "s/ dBm//" -e "s/  / /" |
+	awk '{ORS = (NR % 3 == 0)? "\n" : " "; print}' |
 	cut -c 20- |
 	csvformat -d ' ' -D ',' |
 	grep -e "${ESSID}$");
@@ -47,4 +47,7 @@ do
 	echo "${exe_time},${line}" | tee -a ${OUT_FILE};
 done
 
-echo "Recordings Taken: `ls ${3} | wc -w`";
+echo "";
+echo "Total Measurements: $(ls ${3} | wc -w)";
+echo "";
+echo "File Saved to: ${OUT_FILE}";
