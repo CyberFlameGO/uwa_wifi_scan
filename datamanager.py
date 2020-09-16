@@ -22,15 +22,26 @@ def combine_data(zone, coords_file='coords.xlsx'):
     """
     locations = pd.read_excel(os.path.join(COORDS_DIR, coords_file),
                                 sheet_name=zone,
-                                usecols=["Latitude", "Longtitude"])
+                                usecols=["lat", "lon"]).to_numpy()
 
-    wifi_data = pd.read_csv(os.path.join(WIFI_DIR, zone, 'complete.csv'),
-                            names=['time', 'bssid', 'channel', 'quality', 'rssi', 'essid'])
+    data_folder = os.path.join(WIFI_DIR, zone)
+    data_filenames = sorted(os.listdir(data_folder))
+    iterations = len(data_filenames) if len(data_filenames) < locations.shape[0] else locations.shape[0]
+    data = []
+    for i in range(iterations):
+        measurements = pd.read_csv(
+            os.path.join(data_folder, data_filenames[i]),
+            names = ['time', 'bssid', 'quality', 'rssi', 'essid']
+        ).to_numpy()
 
-    locations['time'] = pd.DataFrame(data=wifi_data['time'].unique())
-    result = pd.merge(locations, wifi_data, on='time')
-    result.columns = ['lat', 'lon', 'time', 'bssid', 'channel', 'quality', 'rssi', 'essid']
-    return result, locations
+        loc = list(locations[i])
+
+        for measurement in measurements:
+            data.append(loc + list(measurement))
+
+    return pd.DataFrame(data,
+        columns=['lat', 'lon', 'time', 'bssid', 'quality', 'rssi', 'essid']
+    )
 
 def save_wifi_loc_data(dataframe, zone):
     """
@@ -45,7 +56,7 @@ def save_wifi_loc_data(dataframe, zone):
     """
     dataframe.to_csv(os.path.join(WIFI_DIR, zone, 'wifi_loc.csv'), index=False)
 
-def load_wifi_loc_data(zone, alternative_folder=''):
+def load_wifi_zone_data(zone, alternative_folder=''):
     """
     Loads the WiFi location data to a pandas dataframe
 
@@ -53,7 +64,31 @@ def load_wifi_loc_data(zone, alternative_folder=''):
         zone: str
             the zone to read for
 
+        alternative_folder: str (optional)
+            If data needs to be loaded from a different folder besides the one
+            planned. Primarily used for testing.
+
     Returns:
         a pandas dataframe with the data loaded in
     """
     return pd.read_csv(os.path.join(WIFI_DIR, alternative_folder, zone, 'wifi_loc.csv'))
+
+def load_wifi_at_location(location, alternative_folder=''):
+    """
+    Loads all of the wifi data for a location by combinining the measurements
+    from the zones.
+
+    Parameters:
+        location: str
+            Name of the location to load data for.
+            eg. whitfeld to load all of the data for Whitfeld Oval.
+
+    Returns:
+        a pandas dataframe with all of the zone data for a location combined
+        together
+    """
+    return pd.concat(
+        [load_wifi_zone_data(x, alternative_folder=alternative_folder)
+            for x in os.listdir(WIFI_DIR)
+                if os.path.isdir(os.path.join(WIFI_DIR, x)) and location in x]
+    ).reset_index()
