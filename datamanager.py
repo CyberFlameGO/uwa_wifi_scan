@@ -71,7 +71,9 @@ def load_wifi_zone_data(zone, alternative_folder=''):
     Returns:
         a pandas dataframe with the data loaded in
     """
-    return pd.read_csv(os.path.join(WIFI_DIR, alternative_folder, zone, 'wifi_loc.csv'))
+    result = pd.read_csv(os.path.join(WIFI_DIR, alternative_folder, zone, 'wifi_loc.csv'))
+    result['quality'] = result['quality'].map(lambda q : eval('/'.join(map(str,map(float,q.split("/"))))))
+    return result
 
 def load_wifi_at_location(location, alternative_folder=''):
     """
