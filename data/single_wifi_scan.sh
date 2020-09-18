@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Bash script for Scanning WiFi Access Points and recording Quality and Signal Strength (RSSI)
+# This script only does a single scan and dumps the results in a csv file.
 # Author: Alex Brown
 
 if [ -z "$1" ]
